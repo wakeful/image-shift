@@ -40,4 +40,6 @@ $ image-shift -n ecs-fargate-cluster -s api -r eu-central-1 -c app=:v1.2.3
 
 # get container image from task definition using aws cli
 $ aws ecs describe-task-definition --task-definition my-task-definition --query 'taskDefinition.containerDefinitions[0].image'
+
+"my-reg.dkr.ecr.eu-central-1.amazonaws.com/my-application/backend:v1.2.3"
 ```
