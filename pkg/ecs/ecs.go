@@ -48,7 +48,8 @@ func (c *Client) NewTaskRevision(
 		if image, ok := images[*container.Name]; ok {
 			newImage := image
 			if strings.HasPrefix(image, ":") {
-				newImage = *container.Image + image
+				oldIMG := strings.Split(*container.Image, ":")
+				newImage = oldIMG[0] + image
 			}
 
 			c.logger.Info(
