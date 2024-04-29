@@ -3,6 +3,7 @@ package sub
 import (
 	"context"
 	"errors"
+	"fmt"
 	"image-shift/pkg/ecs"
 	"log/slog"
 	"strings"
@@ -19,35 +20,35 @@ type Shift struct {
 	region     string
 }
 
-func (s *Shift) run(_ *cobra.Command, _ []string) {
+func (s *Shift) run(_ *cobra.Command, _ []string) error {
 	ctx := context.Background()
 
 	client, err := ecs.NewClient(ctx, s.logger, s.region)
 	if err != nil {
 		s.logger.Error("failed to create ECS client", "error", err)
 
-		return
+		return fmt.Errorf("failed to create ECS client: %w", err)
 	}
 
 	task, err := client.GetTask(ctx, s.cluster, s.service)
 	if err != nil {
 		s.logger.Error("failed to get task definition", "error", err)
 
-		return
+		return fmt.Errorf("failed to get task definition: %w", err)
 	}
 
 	remapContainers := parseUpdates(s.containers, s.logger)
 	if len(remapContainers) == 0 {
 		s.logger.Warn("no containers to update")
 
-		return
+		return nil
 	}
 
 	revision, err := client.NewTaskRevision(ctx, task, remapContainers)
 	if err != nil {
 		s.logger.Error("failed to create new task revision", "error", err)
 
-		return
+		return fmt.Errorf("failed to create new task revision: %w", err)
 	}
 
 	s.logger.Info("new task revision created", "revision", *revision)
@@ -55,14 +56,16 @@ func (s *Shift) run(_ *cobra.Command, _ []string) {
 	if !s.deploy {
 		s.logger.Info("task update / deployment skipped")
 
-		return
+		return nil
 	}
 
 	if errDeploy := client.DeployTaskARN(ctx, s.cluster, s.service, *revision); errDeploy != nil {
 		s.logger.Error("failed to deploy new task revision", "error", errDeploy)
 
-		return
+		return fmt.Errorf("failed to deploy new task revision: %w", errDeploy)
 	}
+
+	return nil
 }
 
 func parseUpdates(input []string, logger *slog.Logger) map[string]string {
@@ -107,7 +110,7 @@ func NewShiftCmd(logger *slog.Logger) *cobra.Command {
 			DisableDefaultCmd: true,
 		},
 		SilenceUsage: true,
-		Run:          shiftCmd.run,
+		RunE:         shiftCmd.run,
 		Example:      "image-shift --cluster-name my-cluster --service api --container app=new-image-test:latest --container proxy=:bump-only-version",
 		PreRunE: func(_ *cobra.Command, _ []string) error {
 			if shiftCmd.region == "" {

@@ -19,7 +19,6 @@ type Client struct {
 // NewClient creates a new ECS client.
 func NewClient(ctx context.Context, logger *slog.Logger, region string) (*Client, error) {
 	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to load configuration, %w", err)
 	}
@@ -47,6 +46,7 @@ func (c *Client) NewTaskRevision(
 	for position, container := range newDefinition {
 		if image, ok := images[*container.Name]; ok {
 			newImage := image
+
 			if strings.HasPrefix(image, ":") {
 				oldIMG := strings.Split(*container.Image, ":")
 				newImage = oldIMG[0] + image
@@ -75,6 +75,7 @@ func (c *Client) NewTaskRevision(
 		RequiresCompatibilities: input.TaskDefinition.RequiresCompatibilities,
 		Cpu:                     input.TaskDefinition.Cpu,
 		Memory:                  input.TaskDefinition.Memory,
+		Volumes:                 input.TaskDefinition.Volumes,
 		Tags:                    tags.Tags,
 	})
 	if err != nil {
