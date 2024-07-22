@@ -1,10 +1,11 @@
 package main
 
 import (
-	"image-shift/cmd/sub"
 	"log"
 	"log/slog"
 	"os"
+
+	"image-shift/cmd/sub"
 )
 
 func main() {

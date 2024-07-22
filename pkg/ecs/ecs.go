@@ -67,16 +67,23 @@ func (c *Client) NewTaskRevision(
 	}
 
 	output, err := c.client.RegisterTaskDefinition(ctx, &ecs.RegisterTaskDefinitionInput{
-		Family:                  input.TaskDefinition.Family,
-		TaskRoleArn:             input.TaskDefinition.TaskRoleArn,
-		ExecutionRoleArn:        input.TaskDefinition.ExecutionRoleArn,
-		NetworkMode:             input.TaskDefinition.NetworkMode,
 		ContainerDefinitions:    newDefinition,
-		RequiresCompatibilities: input.TaskDefinition.RequiresCompatibilities,
+		Family:                  input.TaskDefinition.Family,
 		Cpu:                     input.TaskDefinition.Cpu,
+		EphemeralStorage:        input.TaskDefinition.EphemeralStorage,
+		ExecutionRoleArn:        input.TaskDefinition.ExecutionRoleArn,
+		InferenceAccelerators:   input.TaskDefinition.InferenceAccelerators,
+		IpcMode:                 input.TaskDefinition.IpcMode,
 		Memory:                  input.TaskDefinition.Memory,
-		Volumes:                 input.TaskDefinition.Volumes,
+		NetworkMode:             input.TaskDefinition.NetworkMode,
+		PidMode:                 input.TaskDefinition.PidMode,
+		PlacementConstraints:    input.TaskDefinition.PlacementConstraints,
+		ProxyConfiguration:      input.TaskDefinition.ProxyConfiguration,
+		RequiresCompatibilities: input.TaskDefinition.RequiresCompatibilities,
+		RuntimePlatform:         input.TaskDefinition.RuntimePlatform,
 		Tags:                    tags.Tags,
+		TaskRoleArn:             input.TaskDefinition.TaskRoleArn,
+		Volumes:                 input.TaskDefinition.Volumes,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to register task definition, %w", err)
