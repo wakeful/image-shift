@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"image-shift/pkg/ecs"
+	"image-shift/pkg/secretsmng"
 
 	"github.com/spf13/cobra"
 )
@@ -16,6 +17,7 @@ type Shift struct {
 	cluster    string
 	service    string
 	containers []string
+	secrets    []string
 	deploy     bool
 	logger     *slog.Logger
 	region     string
@@ -45,7 +47,14 @@ func (s *Shift) run(_ *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	revision, err := client.NewTaskRevision(ctx, task, remapContainers)
+	secrets, err := secretsmng.GetSecrets(ctx, s.region, s.secrets)
+	if err != nil {
+		s.logger.Error("failed to read secrets", "error", err)
+
+		return fmt.Errorf("failed to read secrets: %w", err)
+	}
+
+	revision, err := client.NewTaskRevision(ctx, task, remapContainers, secrets)
 	if err != nil {
 		s.logger.Error("failed to create new task revision", "error", err)
 
@@ -55,7 +64,7 @@ func (s *Shift) run(_ *cobra.Command, _ []string) error {
 	s.logger.Info("new task revision created", "revision", *revision)
 
 	if !s.deploy {
-		s.logger.Info("task update / deployment skipped")
+		s.logger.Info("task updated / deployment skipped")
 
 		return nil
 	}
@@ -158,8 +167,14 @@ func NewShiftCmd(logger *slog.Logger) *cobra.Command {
 		"container",
 		"c",
 		[]string{},
-		"Name and version of the container",
+		"name and version of the container",
 	)
+	serviceCmd.Flags().StringSliceVarP(
+		&shiftCmd.secrets,
+		"secret",
+		"x",
+		[]string{},
+		"secret names to be included in the container(s), json key values")
 	serviceCmd.Flags().BoolVarP(
 		&shiftCmd.deploy,
 		"deploy",

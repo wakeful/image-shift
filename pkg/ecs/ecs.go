@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 )
 
 type Client struct {
@@ -34,6 +35,7 @@ func (c *Client) NewTaskRevision(
 	ctx context.Context,
 	input *ecs.DescribeTaskDefinitionOutput,
 	images map[string]string,
+	secrets map[string]string,
 ) (*string, error) {
 	tags, err := c.client.ListTagsForResource(ctx, &ecs.ListTagsForResourceInput{
 		ResourceArn: input.TaskDefinition.TaskDefinitionArn,
@@ -41,6 +43,8 @@ func (c *Client) NewTaskRevision(
 	if err != nil {
 		return nil, fmt.Errorf("failed to list tags for resource, %w", err)
 	}
+
+	secretMapping := map2secrets(secrets)
 
 	newDefinition := input.TaskDefinition.ContainerDefinitions
 	for position, container := range newDefinition {
@@ -63,6 +67,24 @@ func (c *Client) NewTaskRevision(
 			)
 
 			newDefinition[position].Image = aws.String(newImage)
+		}
+
+		if len(newDefinition[position].Environment) != 0 {
+			var newEnv []types.KeyValuePair
+
+			for _, n := range newDefinition[position].Environment {
+				if _, ok := secrets[*n.Name]; ok {
+					continue
+				}
+
+				newEnv = append(newEnv, n)
+			}
+
+			newDefinition[position].Environment = newEnv
+		}
+
+		if len(secretMapping) != 0 {
+			newDefinition[position].Secrets = secretMapping
 		}
 	}
 
@@ -90,6 +112,19 @@ func (c *Client) NewTaskRevision(
 	}
 
 	return output.TaskDefinition.TaskDefinitionArn, nil
+}
+
+// map2secrets change map[string]string into []types.Secret.
+func map2secrets(secrets map[string]string) []types.Secret {
+	var output []types.Secret
+	for k, v := range secrets {
+		output = append(output, types.Secret{
+			Name:      aws.String(k),
+			ValueFrom: aws.String(v),
+		})
+	}
+
+	return output
 }
 
 // GetTask return task definition for given service in ECS cluster.

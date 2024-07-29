@@ -19,7 +19,8 @@ Flags:
   -r, --region string         region of your ECS cluster
   -n, --cluster-name string   name of your ECS cluster
   -s, --service string        select service in ECS cluster
-  -c, --container strings     Name and version of the container
+  -c, --container strings     name and version of the container
+  -x, --secret strings        secret names to be included in the container(s), json key values
   -d, --deploy                update & deploy service to new task definition
   -h, --help                  help for image-shift
 ```
