@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"os"
 
-	"image-shift/cmd/sub"
+	"github.com/wakeful/image-shift/cmd/sub"
 )
 
 func main() {

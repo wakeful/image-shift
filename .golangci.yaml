@@ -1,18 +1,11 @@
 linters:
   enable-all: true
   disable:
-    - deadcode
-    - exhaustivestruct
+    - execinquery
     - exhaustruct
+    - exportloopref
     - funlen
-    - golint
-    - ifshort
-    - interfacer
-    - maligned
-    - nosnakecase
-    - scopelint
-    - structcheck
-    - varcheck
+    - gomnd
 linters-settings:
   depguard:
     rules:
@@ -24,3 +17,6 @@ linters-settings:
           - github.com/aws/aws-sdk-go-v2/service/ecs
           - github.com/aws/aws-sdk-go-v2/service/secretsmanager
           - github.com/spf13/cobra
+          - github.com/wakeful/image-shift/pkg/ecs
+          - github.com/wakeful/image-shift/pkg/secretsmng
+          - github.com/wakeful/image-shift/cmd/sub

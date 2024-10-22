@@ -7,10 +7,9 @@ import (
 	"log/slog"
 	"strings"
 
-	"image-shift/pkg/ecs"
-	"image-shift/pkg/secretsmng"
-
 	"github.com/spf13/cobra"
+	"github.com/wakeful/image-shift/pkg/ecs"
+	"github.com/wakeful/image-shift/pkg/secretsmng"
 )
 
 type Shift struct {
@@ -81,9 +80,11 @@ func (s *Shift) run(_ *cobra.Command, _ []string) error {
 func parseUpdates(input []string, logger *slog.Logger) map[string]string {
 	output := make(map[string]string)
 
+	const pair = 2
+
 	for _, mapping := range input {
 		split := strings.Split(mapping, "=")
-		if len(split) != 2 {
+		if len(split) != pair {
 			logger.Warn("invalid container mapping, should be in format: container-name=image-name:tag or container-name=:tag")
 
 			continue
@@ -121,7 +122,8 @@ func NewShiftCmd(logger *slog.Logger) *cobra.Command {
 		},
 		SilenceUsage: true,
 		RunE:         shiftCmd.run,
-		Example:      "image-shift --cluster-name my-cluster --service api --container app=new-image-test:latest --container proxy=:bump-only-version",
+		Example: "image-shift --cluster-name my-cluster --service api --container app=new-image-test:latest" +
+			" --container proxy=:bump-only-version",
 		PreRunE: func(_ *cobra.Command, _ []string) error {
 			if shiftCmd.region == "" {
 				return errArgRegionRequired

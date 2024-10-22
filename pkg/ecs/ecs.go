@@ -116,7 +116,7 @@ func (c *Client) NewTaskRevision(
 
 // map2secrets change map[string]string into []types.Secret.
 func map2secrets(secrets map[string]string) []types.Secret {
-	var output []types.Secret
+	output := make([]types.Secret, 0, len(secrets))
 	for k, v := range secrets {
 		output = append(output, types.Secret{
 			Name:      aws.String(k),
@@ -125,6 +125,15 @@ func map2secrets(secrets map[string]string) []types.Secret {
 	}
 
 	return output
+}
+
+type ServiceNotFoundError struct {
+	Service string
+	Cluster string
+}
+
+func (e *ServiceNotFoundError) Error() string {
+	return fmt.Sprintf("service %s not found in cluster %s", e.Service, e.Cluster)
 }
 
 // GetTask return task definition for given service in ECS cluster.
@@ -138,7 +147,10 @@ func (c *Client) GetTask(ctx context.Context, cluster, service string) (*ecs.Des
 	}
 
 	if len(result.Services) == 0 {
-		return nil, fmt.Errorf("service: %s not found in cluster: %s", service, cluster)
+		return nil, &ServiceNotFoundError{
+			Service: service,
+			Cluster: cluster,
+		}
 	}
 
 	output, err := c.client.DescribeTaskDefinition(ctx, &ecs.DescribeTaskDefinitionInput{
