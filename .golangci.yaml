@@ -1,11 +1,9 @@
 linters:
   enable-all: true
   disable:
-    - execinquery
     - exhaustruct
     - exportloopref
     - funlen
-    - gomnd
 linters-settings:
   depguard:
     rules:
